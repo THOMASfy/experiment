@@ -1,0 +1,22 @@
+__pycache__/
+*.py[cod]
+.cache/
+
+# Large datasets / local artifacts
+longmemeval_*.json
+*.zip
+results/
+
+# Local caches / databases / logs
+*.db
+*.sqlite
+*.jsonl
+*.log
+
+# Local config / secrets
+opencode.jsonc
+PLAN_FIXES.md
+Secom/区/secom_lme/run_local.cmd
+
+# Embedded upstream repo; keep separate from this experiment repo
+mem0/

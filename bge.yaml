@@ -1,0 +1,46 @@
+# ============================================================================
+# BGE 检索器配置 (BGE-aligned)
+#
+#  !! 占位文件 ——
+#  正式进表前请用 SeCom 仓库里的那份覆盖:
+#      experiments/baselines/external/_remote_secom_dropin/bge.yaml
+#
+#  为什么要对齐:
+#  同一个 query, 加不加 query 前缀, 编码出来的向量完全不同。
+#  SeCom / A-Mem / ThinkQE 用的 query 前缀必须和这里**逐字符一致**,
+#  否则三行数字之间没有可比性(会出现"某个基线突然高很多"的假象)。
+#
+#  下面这个值是 BAAI/bge-base-en-v1.5 官方 model card 里的原文:
+#      queries = ["Represent this sentence for searching relevant passages: " + query
+#                 for query in queries]
+#  注意末尾有一个空格, 不要删。
+#
+#  如果 SeCom 那份 yaml 里的 query 前缀和这里不同:
+#      1. 直接把 SeCom 的文件拷过来覆盖本文件;
+#      2. 或者临时用 --query-prefix "<SeCom 的原文>" 覆盖;
+#      3. 跑完检查 meta.json 里的 query_prefix 和 query_prefix_source,
+#         确认与其它基线用的前缀一致。
+# ============================================================================
+
+# ---- 扁平字段 (runner 优先读这一层) ----
+model: BAAI/bge-base-en-v1.5
+embedding_dims: 768
+device: cuda
+
+# BGE v1.5 非对称检索: query 侧加指令, passage 侧不加
+query_instruction: "Represent this sentence for searching relevant passages: "
+
+# 说明: mem0 的 HuggingFace embedder 调的是 model.encode(text, convert_to_numpy=True),
+# 没有显式做 normalize_embeddings=True。
+# 但 Qdrant 集合建的是 Distance.COSINE (mem0/vector_stores/qdrant.py:145),
+# 余弦距离内部会做归一化, 所以和 BGE 官方 encode(normalize_embeddings=True)
+# 在数学上完全等价 —— 这里写 true 只是记录语义, 不需要额外处理。
+normalize_embeddings: true
+
+# ---- 嵌套形式 (给 SeCom 风格的嵌套读取留个后路) ----
+retriever:
+  provider: bge
+  model: BAAI/bge-base-en-v1.5
+  embedding_dims: 768
+  device: cuda
+  query_instruction: "Represent this sentence for searching relevant passages: "
