@@ -1,0 +1,9 @@
+# Local run tree: dataset, venv, caches, logs, and the nested SeCom checkout.
+longmemeval/
+.venv/
+__pycache__/
+*.sqlite
+*.log
+
+# The runner's raw predictions are published only as a small artifact.
+!artifacts/auto_470_predictions.jsonl

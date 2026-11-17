@@ -1,0 +1,41 @@
+{
+  "n_done": 81,
+  "n_error": 0,
+  "n_qa_judged": 81,
+  "qa_accuracy": 0.9135802469135802,
+  "qa_by_type": {
+    "single-session-assistant": {
+      "accuracy": 1.0,
+      "n": 55
+    },
+    "single-session-user": {
+      "accuracy": 0.7307692307692307,
+      "n": 26
+    }
+  },
+  "n_abstention": 0,
+  "qa_abstention_accuracy": null,
+  "retrieval": {
+    "n": 81,
+    "recall@5": 0.9012345679012346,
+    "ndcg@5": 0.8322072980829437,
+    "recall@10": 0.9259259259259259,
+    "ndcg@10": 0.8404995457853356
+  },
+  "retrieval_by_type": {
+    "single-session-assistant": {
+      "n": 55,
+      "recall@5": 1.0,
+      "ndcg@5": 0.9707779865584432,
+      "recall@10": 1.0,
+      "ndcg@10": 0.9707779865584432
+    },
+    "single-session-user": {
+      "n": 26,
+      "recall@5": 0.6923076923076923,
+      "ndcg@5": 0.5390769955386182,
+      "recall@10": 0.7692307692307693,
+      "ndcg@10": 0.5649105364576086
+    }
+  }
+}

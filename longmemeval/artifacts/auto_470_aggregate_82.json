@@ -1,0 +1,41 @@
+{
+  "n_done": 82,
+  "n_error": 1,
+  "n_qa_judged": 81,
+  "qa_accuracy": 0.9135802469135802,
+  "qa_by_type": {
+    "single-session-assistant": {
+      "accuracy": 1.0,
+      "n": 55
+    },
+    "single-session-user": {
+      "accuracy": 0.7307692307692307,
+      "n": 26
+    }
+  },
+  "n_abstention": 0,
+  "qa_abstention_accuracy": null,
+  "retrieval": {
+    "n": 82,
+    "recall@5": 0.8902439024390244,
+    "ndcg@5": 0.8220584285941273,
+    "recall@10": 0.9146341463414634,
+    "ndcg@10": 0.8302495513245388
+  },
+  "retrieval_by_type": {
+    "single-session-assistant": {
+      "n": 56,
+      "recall@5": 0.9821428571428571,
+      "ndcg@5": 0.9534426653698995,
+      "recall@10": 0.9821428571428571,
+      "ndcg@10": 0.9534426653698995
+    },
+    "single-session-user": {
+      "n": 26,
+      "recall@5": 0.6923076923076923,
+      "ndcg@5": 0.5390769955386182,
+      "recall@10": 0.7692307692307693,
+      "ndcg@10": 0.5649105364576086
+    }
+  }
+}
