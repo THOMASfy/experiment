@@ -1,0 +1,5 @@
+2026-11-18 16:56:53,435 [INFO] Run dir: results\mem0_bge_s_locked150_fact\mem0_20261118-165525 | planned=150 | already_
+2026-11-18 17:25:02,022 [INFO] extract cache: hits=7687 misses=0 (hit rate 100.0%)
+2026-11-18 17:25:02,042 [INFO] LLM usage: calls=0 retried=0 prompt_tok=0 cache_hit=0 (0.0%) completion_tok=0 | est_cost
+2026-11-18 17:25:02,042 [INFO] Finished. n_total=150 n_ok=150 n_failed=0 n_with_gold=150
+2026-11-18 17:25:02,042 [INFO] overall: {"recall@1": 0.548889, "ndcg@1": 0.893333, "recall@3": 0.890556, "ndcg@3": 0.90

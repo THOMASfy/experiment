@@ -1,0 +1,97 @@
+{
+  "n": 150,
+  "ks": [
+    5,
+    10
+  ],
+  "metrics": {
+    "n": 150,
+    "recall_any@5": 0.94,
+    "recall_all@5": 0.9133333333333333,
+    "fractional_recall@5": 0.931111111111111,
+    "ndcg@5": 0.892154360030158,
+    "recall_any@10": 0.9466666666666667,
+    "recall_all@10": 0.94,
+    "fractional_recall@10": 0.945,
+    "ndcg@10": 0.8970426793643829
+  },
+  "by_type": {
+    "knowledge-update": {
+      "n": 23,
+      "recall_any@5": 1.0,
+      "recall_all@5": 1.0,
+      "fractional_recall@5": 1.0,
+      "ndcg@5": 0.983180312728933,
+      "recall_any@10": 1.0,
+      "recall_all@10": 1.0,
+      "fractional_recall@10": 1.0,
+      "ndcg@10": 0.983180312728933
+    },
+    "multi-session": {
+      "n": 40,
+      "recall_any@5": 1.0,
+      "recall_all@5": 0.975,
+      "fractional_recall@5": 0.9875,
+      "ndcg@5": 0.9520361721023033,
+      "recall_any@10": 1.0,
+      "recall_all@10": 0.975,
+      "fractional_recall@10": 0.99375,
+      "ndcg@10": 0.9551149519615624
+    },
+    "single-session-assistant": {
+      "n": 17,
+      "recall_any@5": 0.5294117647058824,
+      "recall_all@5": 0.5294117647058824,
+      "fractional_recall@5": 0.5294117647058824,
+      "ndcg@5": 0.5,
+      "recall_any@10": 0.5294117647058824,
+      "recall_all@10": 0.5294117647058824,
+      "fractional_recall@10": 0.5294117647058824,
+      "ndcg@10": 0.5
+    },
+    "single-session-preference": {
+      "n": 9,
+      "recall_any@5": 0.8888888888888888,
+      "recall_all@5": 0.8888888888888888,
+      "fractional_recall@5": 0.8888888888888888,
+      "ndcg@5": 0.847881083730162,
+      "recall_any@10": 1.0,
+      "recall_all@10": 1.0,
+      "fractional_recall@10": 1.0,
+      "ndcg@10": 0.884918120767199
+    },
+    "single-session-user": {
+      "n": 21,
+      "recall_any@5": 1.0,
+      "recall_all@5": 1.0,
+      "fractional_recall@5": 1.0,
+      "ndcg@5": 0.9472756790816368,
+      "recall_any@10": 1.0,
+      "recall_all@10": 1.0,
+      "fractional_recall@10": 1.0,
+      "ndcg@10": 0.9472756790816368
+    },
+    "temporal-reasoning": {
+      "n": 40,
+      "recall_any@5": 1.0,
+      "recall_all@5": 0.925,
+      "fractional_recall@5": 0.9791666666666666,
+      "ndcg@5": 0.927621022834507,
+      "recall_any@10": 1.0,
+      "recall_all@10": 1.0,
+      "fractional_recall@10": 1.0,
+      "ndcg@10": 0.9345401071452581
+    }
+  },
+  "n_gold_distribution": {
+    "1": 53,
+    "2": 68,
+    "3": 17,
+    "4": 5,
+    "5": 5,
+    "6": 2
+  },
+  "n_multi_gold": 97,
+  "predictions": "results\\mem0_bge_s_locked150_session_strict\\mem0_20261118-172509\\predictions.jsonl",
+  "include_abs": false
+}

@@ -1,0 +1,97 @@
+{
+  "n": 150,
+  "ks": [
+    5,
+    10
+  ],
+  "metrics": {
+    "n": 150,
+    "recall_any@5": 0.9466666666666667,
+    "recall_all@5": 0.9066666666666666,
+    "fractional_recall@5": 0.9331111111111111,
+    "ndcg@5": 0.9174634515710519,
+    "recall_any@10": 0.9466666666666667,
+    "recall_all@10": 0.9333333333333333,
+    "fractional_recall@10": 0.9427777777777777,
+    "ndcg@10": 0.9217031501427739
+  },
+  "by_type": {
+    "knowledge-update": {
+      "n": 23,
+      "recall_any@5": 1.0,
+      "recall_all@5": 1.0,
+      "fractional_recall@5": 1.0,
+      "ndcg@5": 1.0,
+      "recall_any@10": 1.0,
+      "recall_all@10": 1.0,
+      "fractional_recall@10": 1.0,
+      "ndcg@10": 1.0
+    },
+    "multi-session": {
+      "n": 40,
+      "recall_any@5": 1.0,
+      "recall_all@5": 0.925,
+      "fractional_recall@5": 0.9741666666666667,
+      "ndcg@5": 0.9607118432811568,
+      "recall_any@10": 1.0,
+      "recall_all@10": 0.975,
+      "fractional_recall@10": 0.99375,
+      "ndcg@10": 0.9707322657565225
+    },
+    "single-session-assistant": {
+      "n": 17,
+      "recall_any@5": 0.5294117647058824,
+      "recall_all@5": 0.5294117647058824,
+      "fractional_recall@5": 0.5294117647058824,
+      "ndcg@5": 0.5294117647058824,
+      "recall_any@10": 0.5294117647058824,
+      "recall_all@10": 0.5294117647058824,
+      "fractional_recall@10": 0.5294117647058824,
+      "ndcg@10": 0.5294117647058824
+    },
+    "single-session-preference": {
+      "n": 9,
+      "recall_any@5": 1.0,
+      "recall_all@5": 1.0,
+      "fractional_recall@5": 1.0,
+      "ndcg@5": 0.8769765845238191,
+      "recall_any@10": 1.0,
+      "recall_all@10": 1.0,
+      "fractional_recall@10": 1.0,
+      "ndcg@10": 0.8769765845238191
+    },
+    "single-session-user": {
+      "n": 21,
+      "recall_any@5": 1.0,
+      "recall_all@5": 1.0,
+      "fractional_recall@5": 1.0,
+      "ndcg@5": 1.0,
+      "recall_any@10": 1.0,
+      "recall_all@10": 1.0,
+      "fractional_recall@10": 1.0,
+      "ndcg@10": 1.0
+    },
+    "temporal-reasoning": {
+      "n": 40,
+      "recall_any@5": 1.0,
+      "recall_all@5": 0.925,
+      "fractional_recall@5": 0.975,
+      "ndcg@5": 0.9574563685924286,
+      "recall_any@10": 1.0,
+      "recall_all@10": 0.975,
+      "fractional_recall@10": 0.9916666666666666,
+      "ndcg@10": 0.9633348157610204
+    }
+  },
+  "n_gold_distribution": {
+    "1": 53,
+    "2": 68,
+    "3": 17,
+    "4": 5,
+    "5": 5,
+    "6": 2
+  },
+  "n_multi_gold": 97,
+  "predictions": "results\\mem0_bge_s_locked150_fact\\mem0_20261118-165525\\predictions.jsonl",
+  "include_abs": false
+}

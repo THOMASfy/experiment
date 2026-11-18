@@ -10,9 +10,11 @@ extraction LLM, `BAAI/bge-base-en-v1.5` (768-d) embeddings, dense retrieval,
 | [`mem0_s_session_470/`](mem0_s_session_470) | S | session (raw fallback) | 470 | 0.9404 | 0.9453 | **inflated, do not cite** (see warning) |
 | [`mem0_s_session_470_strict/`](mem0_s_session_470_strict) | S | session, strict | 470 | 0.9064 | 0.9086 | complete, clean ablation |
 | [`mem0_lme_s/`](mem0_lme_s) | S | fact | 470 | **0.9234** | **0.9279** | complete, **main-table number** |
-| [`mem0_s_151_session/`](mem0_s_151_session) | S | session | 151 | 0.9536 | 0.9503 | complete (subset) |
+| [`mem0_s_151_session/`](mem0_s_151_session) | S | session (raw fallback) | 151 | 0.9536 | 0.9503 | complete (subset); same inflation, do not cite |
 | [`mem0_s_151_fact/`](mem0_s_151_fact) | S | fact | 151 | 0.9007 | 0.9158 | complete (subset) |
 | [`mem0_s_151_fact_os2000/`](mem0_s_151_fact_os2000) | S | fact, `oversample=2000` | 151 | 0.9007 | 0.9158 | complete; identical to os200, rules out truncation |
+| [`mem0_s_locked150_fact/`](mem0_s_locked150_fact) | S | fact | 150 | 0.9067 | 0.9175 | complete, locked appendix ids |
+| [`mem0_s_locked150_session_strict/`](mem0_s_locked150_session_strict) | S | session, strict | 150 | 0.9133 | 0.8922 | complete, locked appendix ids |
 | [`mem0_lme_m_partial/`](mem0_lme_m_partial) | M | fact | 470 | - | - | **incomplete, do not cite** (98/470 ok) |
 
 > WARNING: the session-level runs currently mix in a **raw-text fallback**. In the
@@ -29,6 +31,11 @@ extraction LLM, `BAAI/bge-base-en-v1.5` (768-d) embeddings, dense retrieval,
 > the entire gap; fact-level is the better granularity here.
 > Evidence, per-type breakdown and the fix are in
 > [`ANALYSIS_session_vs_fact.md`](ANALYSIS_session_vs_fact.md).
+>
+> Subsets: `subsets/s_150_locked.json` is the locked 150-question appendix list (used by
+> the two `mem0_s_locked150_*` runs). `subsets/s_150.json` is
+> `make_subset.py --n 150 --seed 42`, which actually yields **151** questions; it is an
+> internal cross-check only and is not interchangeable with the locked list.
 
 ---
 
@@ -187,7 +194,7 @@ python longmemeval/eval_retrieval_official.py \
 | `mem0_lme_s/aggregate_official.json` | official `recall_all` / `ndcg` re-scoring |
 | `mem0_lme_s/llm_usage.json` | token counts and cost estimate |
 | `mem0_lme_s/cache/extract_cache_s_facts.sqlite.gz` | S slice of the LLM extraction cache (facts only) + `manifest.json` |
-| `mem0_s_session_470/`, `mem0_s_session_470_strict/`, `mem0_s_151_session/`, `mem0_s_151_fact/`, `mem0_s_151_fact_os2000/` | 2026-11-18 runs: `meta.json`, `predictions.jsonl`, runner + official aggregates, `llm_usage.json`, `evidence.log` |
+| `mem0_s_session_470/`, `mem0_s_session_470_strict/`, `mem0_s_151_session/`, `mem0_s_151_fact/`, `mem0_s_151_fact_os2000/`, `mem0_s_locked150_fact/`, `mem0_s_locked150_session_strict/` | 2026-11-18 runs: `meta.json`, `predictions.jsonl`, runner + official aggregates, `llm_usage.json`, `evidence.log` |
 | `ANALYSIS_session_vs_fact.md` | why session-level scores higher than fact-level, and why it is not a clean main-table number |
 | release `mem0-s-cache-v1` | same slice **with** BGE vectors, 243MB gzip (not in git history) |
 | `restore_extract_cache.py` | unpack / merge the cache archive |
