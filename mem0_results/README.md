@@ -37,6 +37,13 @@ extraction LLM, `BAAI/bge-base-en-v1.5` (768-d) embeddings, dense retrieval,
 > `make_subset.py --n 150 --seed 42`, which actually yields **151** questions; it is an
 > internal cross-check only and is not interchangeable with the locked list.
 
+Integrity check (no network, no LLM): every directory below is rescored from its committed
+`predictions.jsonl` and compared to its committed `aggregate_official.json`.
+
+```bash
+python mem0_results/verify_published.py   # PASS: all published runs reproduce
+```
+
 ---
 
 ## `mem0_lme_s/` — LongMemEval-S, 470/470
