@@ -1,0 +1,17 @@
+{
+  "calls": 2067,
+  "retried_calls": 0,
+  "prompt_tokens": 6432616,
+  "cache_hit_tokens": 2666338,
+  "cache_miss_tokens": 3766278,
+  "completion_tokens": 393689,
+  "cache_hit_ratio": 0.4145,
+  "est_cost_usd": {
+    "off_peak": 0.81,
+    "peak": 1.62
+  },
+  "extract_cache": {
+    "hits": 1961,
+    "misses": 2067
+  }
+}

@@ -26,6 +26,12 @@ Usage
     python eval_retrieval_official.py predictions.jsonl --out metrics.json
     python eval_retrieval_official.py predictions.jsonl --include-abs
 
+Other runners use different field names (e.g. mem0-lme writes `answer_session_ids`
+/ `retrieved_sessions`), so the gold/retrieved keys can be overridden:
+
+    python eval_retrieval_official.py predictions.jsonl \\
+        --gold-key answer_session_ids --retrieved-key retrieved_sessions
+
 Official references
 -------------------
 - https://github.com/xiaowu0162/LongMemEval/blob/main/src/retrieval/eval_utils.py
@@ -121,13 +127,15 @@ def is_abstention(row: Dict[str, Any]) -> bool:
 def aggregate(
     rows: Sequence[Dict[str, Any]],
     ks: Sequence[int],
+    gold_key: str = "gold_session_ids",
+    retrieved_key: str = "retrieved_session_ids",
 ) -> Dict[str, Any]:
     scored: List[Tuple[Dict[str, Any], Dict[str, float]]] = []
     for row in rows:
-        gold = row.get("gold_session_ids") or []
+        gold = row.get(gold_key) or []
         if not gold:
             continue
-        scores = retrieval_scores(row.get("retrieved_session_ids") or [], gold, ks)
+        scores = retrieval_scores(row.get(retrieved_key) or [], gold, ks)
         if scores.get("n_gold", 0) <= 0:
             continue
         scored.append((row, scores))
@@ -173,6 +181,16 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="include abstention questions (official retrieval metrics exclude them)",
     )
+    parser.add_argument(
+        "--gold-key",
+        default="gold_session_ids",
+        help="field holding gold session ids (default: gold_session_ids)",
+    )
+    parser.add_argument(
+        "--retrieved-key",
+        default="retrieved_session_ids",
+        help="field holding ranked retrieved session ids (default: retrieved_session_ids)",
+    )
     return parser.parse_args()
 
 
@@ -182,7 +200,7 @@ def main() -> None:
     if not args.include_abs:
         rows = [row for row in rows if not is_abstention(row)]
 
-    result = aggregate(rows, args.ks)
+    result = aggregate(rows, args.ks, args.gold_key, args.retrieved_key)
     result["predictions"] = args.predictions
     result["include_abs"] = bool(args.include_abs)
 

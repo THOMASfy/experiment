@@ -20,3 +20,6 @@ Secom/区/secom_lme/run_local.cmd
 
 # Embedded upstream repo; keep separate from this experiment repo
 mem0/
+
+# Published result artifacts are tiny (session ids only) and are tracked
+!mem0_results/**/*.jsonl
