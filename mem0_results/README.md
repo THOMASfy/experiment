@@ -7,8 +7,9 @@ extraction LLM, `BAAI/bge-base-en-v1.5` (768-d) embeddings, dense retrieval,
 
 | run | dataset | caliber | n | recall_all@5 | nDCG@5 | status |
 |---|---|---|---:|---:|---:|---|
-| [`mem0_s_session_470/`](mem0_s_session_470) | S | session | 470 | **0.9404** | 0.9453 | complete, **not a clean main-table number** (see warning) |
-| [`mem0_lme_s/`](mem0_lme_s) | S | fact | 470 | 0.9234 | 0.9279 | complete |
+| [`mem0_s_session_470/`](mem0_s_session_470) | S | session (raw fallback) | 470 | 0.9404 | 0.9453 | **inflated, do not cite** (see warning) |
+| [`mem0_s_session_470_strict/`](mem0_s_session_470_strict) | S | session, strict | 470 | 0.9064 | 0.9086 | complete, clean ablation |
+| [`mem0_lme_s/`](mem0_lme_s) | S | fact | 470 | **0.9234** | **0.9279** | complete, **main-table number** |
 | [`mem0_s_151_session/`](mem0_s_151_session) | S | session | 151 | 0.9536 | 0.9503 | complete (subset) |
 | [`mem0_s_151_fact/`](mem0_s_151_fact) | S | fact | 151 | 0.9007 | 0.9158 | complete (subset) |
 | [`mem0_s_151_fact_os2000/`](mem0_s_151_fact_os2000) | S | fact, `oversample=2000` | 151 | 0.9007 | 0.9158 | complete; identical to os200, rules out truncation |
@@ -22,6 +23,10 @@ extraction LLM, `BAAI/bge-base-en-v1.5` (768-d) embeddings, dense retrieval,
 > session-level retrieval. The second suspected confounder, fact-level truncation at
 > `oversample=200`, was tested and **ruled out**: with `oversample=2000` the 151-question
 > fact run returns byte-identical retrieval lists (0/151 differ) and identical metrics.
+> With the fallback removed (`--session-level-strict`, 470/470, `calls=0`) session-level
+> drops to 0.9064 / 0.9086, i.e. **below** fact-level, and `single-session-assistant`
+> falls from 1.0000 to exactly 0.6607 (the fact-level value). The fallback accounts for
+> the entire gap; fact-level is the better granularity here.
 > Evidence, per-type breakdown and the fix are in
 > [`ANALYSIS_session_vs_fact.md`](ANALYSIS_session_vs_fact.md).
 
@@ -182,7 +187,7 @@ python longmemeval/eval_retrieval_official.py \
 | `mem0_lme_s/aggregate_official.json` | official `recall_all` / `ndcg` re-scoring |
 | `mem0_lme_s/llm_usage.json` | token counts and cost estimate |
 | `mem0_lme_s/cache/extract_cache_s_facts.sqlite.gz` | S slice of the LLM extraction cache (facts only) + `manifest.json` |
-| `mem0_s_session_470/`, `mem0_s_151_session/`, `mem0_s_151_fact/`, `mem0_s_151_fact_os2000/` | 2026-11-18 runs: `meta.json`, `predictions.jsonl`, runner + official aggregates, `llm_usage.json`, `evidence.log` |
+| `mem0_s_session_470/`, `mem0_s_session_470_strict/`, `mem0_s_151_session/`, `mem0_s_151_fact/`, `mem0_s_151_fact_os2000/` | 2026-11-18 runs: `meta.json`, `predictions.jsonl`, runner + official aggregates, `llm_usage.json`, `evidence.log` |
 | `ANALYSIS_session_vs_fact.md` | why session-level scores higher than fact-level, and why it is not a clean main-table number |
 | release `mem0-s-cache-v1` | same slice **with** BGE vectors, 243MB gzip (not in git history) |
 | `restore_extract_cache.py` | unpack / merge the cache archive |

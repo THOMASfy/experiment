@@ -1,0 +1,121 @@
+{
+  "n_total": 470,
+  "n_ok": 470,
+  "n_failed": 0,
+  "n_with_gold": 470,
+  "topk": 10,
+  "retrieval": "dense",
+  "ks": [
+    1,
+    3,
+    5,
+    10
+  ],
+  "overall": {
+    "recall@1": 0.548121,
+    "ndcg@1": 0.880851,
+    "recall@3": 0.898794,
+    "ndcg@3": 0.901672,
+    "recall@5": 0.932589,
+    "ndcg@5": 0.908605,
+    "recall@10": 0.949291,
+    "ndcg@10": 0.915063,
+    "n": 470
+  },
+  "overall_excluding_failed": {
+    "recall@1": 0.548121,
+    "ndcg@1": 0.880851,
+    "recall@3": 0.898794,
+    "ndcg@3": 0.901672,
+    "recall@5": 0.932589,
+    "ndcg@5": 0.908605,
+    "recall@10": 0.949291,
+    "ndcg@10": 0.915063,
+    "n": 470
+  },
+  "by_question_type": {
+    "knowledge-update": {
+      "recall@1": 0.486111,
+      "ndcg@1": 0.972222,
+      "recall@3": 0.986111,
+      "ndcg@3": 0.977393,
+      "recall@5": 0.993056,
+      "ndcg@5": 0.980688,
+      "recall@10": 1.0,
+      "ndcg@10": 0.983526,
+      "n": 72
+    },
+    "multi-session": {
+      "recall@1": 0.404545,
+      "ndcg@1": 0.966942,
+      "recall@3": 0.912672,
+      "ndcg@3": 0.958195,
+      "recall@5": 0.984298,
+      "ndcg@5": 0.969321,
+      "recall@10": 0.989669,
+      "ndcg@10": 0.972181,
+      "n": 121
+    },
+    "single-session-assistant": {
+      "recall@1": 0.642857,
+      "ndcg@1": 0.642857,
+      "recall@3": 0.660714,
+      "ndcg@3": 0.651786,
+      "recall@5": 0.660714,
+      "ndcg@5": 0.651786,
+      "recall@10": 0.660714,
+      "ndcg@10": 0.651786,
+      "n": 56
+    },
+    "single-session-preference": {
+      "recall@1": 0.7,
+      "ndcg@1": 0.7,
+      "recall@3": 0.933333,
+      "ndcg@3": 0.838488,
+      "recall@5": 0.933333,
+      "ndcg@5": 0.838488,
+      "recall@10": 1.0,
+      "ndcg@10": 0.860115,
+      "n": 30
+    },
+    "single-session-user": {
+      "recall@1": 0.90625,
+      "ndcg@1": 0.90625,
+      "recall@3": 0.984375,
+      "ndcg@3": 0.953496,
+      "recall@5": 0.984375,
+      "ndcg@5": 0.953496,
+      "recall@10": 0.984375,
+      "ndcg@10": 0.953496,
+      "n": 64
+    },
+    "temporal-reasoning": {
+      "recall@1": 0.461942,
+      "ndcg@1": 0.88189,
+      "recall@3": 0.889764,
+      "ndcg@3": 0.903887,
+      "recall@5": 0.942651,
+      "ndcg@5": 0.917075,
+      "recall@10": 0.979659,
+      "ndcg@10": 0.931533,
+      "n": 127
+    }
+  },
+  "llm_usage": {
+    "calls": 0,
+    "retried_calls": 0,
+    "prompt_tokens": 0,
+    "cache_hit_tokens": 0,
+    "cache_miss_tokens": 0,
+    "completion_tokens": 0,
+    "cache_hit_ratio": 0.0,
+    "est_cost_usd": {
+      "off_peak": 0.0,
+      "peak": 0.0
+    },
+    "extract_cache": {
+      "hits": 24435,
+      "misses": 0
+    }
+  }
+}

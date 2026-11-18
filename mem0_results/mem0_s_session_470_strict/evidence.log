@@ -1,0 +1,5 @@
+2026-11-18 16:28:06,776 [INFO] Run dir: results\mem0_bge_session_strict\mem0_20261118-162640 | planned=470 | already_do
+2026-11-18 16:51:54,565 [INFO] extract cache: hits=24435 misses=0 (hit rate 100.0%)
+2026-11-18 16:51:54,581 [INFO] LLM usage: calls=0 retried=0 prompt_tok=0 cache_hit=0 (0.0%) completion_tok=0 | est_cost
+2026-11-18 16:51:54,582 [INFO] Finished. n_total=470 n_ok=470 n_failed=0 n_with_gold=470
+2026-11-18 16:51:54,582 [INFO] overall: {"recall@1": 0.548121, "ndcg@1": 0.880851, "recall@3": 0.898794, "ndcg@3": 0.90

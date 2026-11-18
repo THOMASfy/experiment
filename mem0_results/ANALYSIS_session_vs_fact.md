@@ -1,4 +1,4 @@
-# S 上 session 级 vs fact 级：为什么 session 级更高，以及它为什么不能直接进主表
+# S 上 session 级 vs fact 级：0.9404 是原文兜底造的虚高，strict 口径下 fact 级更好
 
 日期：2026-11-18　数据：LongMemEval-S（470 非 abstention）　LLM 调用：**0**（全部缓存命中）
 
@@ -19,9 +19,12 @@
 截断在 S 上不是实际约束，详见下文「差异 #2」。
 
 **结论：0.9404 是「74% fact 级 + 26% 原文 BGE 级」的混合结果，不能作为
-"mem0 提炼后 session 级"的主表数字，也不能和 BGE / ThinkQE / SeCom 的纯 session 检索并表。
-去掉原文兜底后（strict，`--session-level-strict`）的数字才是干净的收口对照；
-470 全量正在跑，跑完补在「strict session 级」一节。**
+"mem0 提炼后 session 级"的主表数字，也不能和 BGE / ThinkQE / SeCom 的纯 session 检索并表。**
+
+去掉原文兜底后（strict，470/470，`calls=0`）得到干净的收口对照：
+`recall_all@5 = 0.9064`、`nDCG@5 = 0.9086`，**低于 fact 级的 0.9234 / 0.9279**，
+assistant 精确回落到 0.6607。也就是说：口径对齐后 **fact 级才是更好的粒度**，
+`0.9404` 的高出部分全部来自那 26% 的原文兜底。详见「strict session 级」一节。
 
 ## 结果一览（官方口径，跳过 `_abs`，分母 = 题数）
 
@@ -31,7 +34,8 @@
 | `mem0_s_151_fact_os2000` | fact 级，`oversample=2000` | 151 | 0.9007 | 0.9158 | 0.9338 | 0.9197 |
 | `mem0_s_151_session` | session 级 | 151 | 0.9536 | 0.9503 | 0.9934 | 0.9562 |
 | `mem0_s_470_fact`（即 `mem0_lme_s`） | fact 级 | 470 | 0.9234 | 0.9279 | 0.9489 | 0.9315 |
-| `mem0_s_session_470` | session 级 | 470 | **0.9404** | **0.9453** | **0.9809** | **0.9530** |
+| `mem0_s_session_470` | session 级（含原文兜底） | 470 | **0.9404** | **0.9453** | **0.9809** | **0.9530** |
+| `mem0_s_session_470_strict` | session 级 strict | 470 | 0.9064 | 0.9086 | 0.9426 | 0.9151 |
 
 辅助指标（470）：
 
@@ -115,18 +119,50 @@ ranked = hits_to_sessions(hits, topk)                      # 先截 200 点，�
 所以差额**只剩差异 #1**。这一点很关键：修 fact 级不需要动 `oversample`，
 只需要把 session 级的原文兜底去掉，两边就共享同一信息源。
 
-## 建议的干净口径
+## strict session 级（干净口径，470）
 
-要得到"只换收口、不换信息源"的对照，只需改一处：
+`--session-level-strict`：`facts == []` 的 session 不入库，其余完全不变。
+470/470 ok，`calls=0`，缓存 `hits=24,435 misses=0`。
 
-1. **strict session 级**（已实现，`--session-level-strict`）：`facts == []` 的 session
-   直接不入库（去掉原文兜底）。这样 session 级与 fact 级共享同一个信息源，
-   差额只反映"把 4.2 条 fact 压成一条向量"这件事本身。
-2. ~~fact 级扩容候选池~~：已被上面的实验排除，不是必要项。若日后在 S 之外的
-   更大数据集上复用，仍建议把 `hits_to_sessions` 改成"先按 session 去重、再截 top-k"，
-   作为与数据规模无关的稳健写法。
+| 口径 | recall_all@5 | nDCG@5 | recall_all@10 | nDCG@10 |
+|---|---:|---:|---:|---:|
+| **fact 级** | **0.9234** | **0.9279** | **0.9489** | **0.9315** |
+| session 级（含原文兜底） | 0.9404 | 0.9453 | 0.9809 | 0.9530 |
+| session 级 strict | 0.9064 | 0.9086 | 0.9426 | 0.9151 |
 
-不需要 LLM（缓存已覆盖 S 全部 22,419 个 session 引用，0 缺失），`calls` 仍为 0。
+去掉兜底后 session 级**低于** fact 级：R@5 −0.0170、nDCG@5 −0.0193、
+R@10 −0.0063、nDCG@10 −0.0164。
+
+分题型（strict vs fact，470）：
+
+| 题型 | n | fact R@5 | strict R@5 | Δ | fact nDCG@5 | strict nDCG@5 |
+|---|---:|---:|---:|---:|---:|---:|
+| knowledge-update | 72 | 1.0000 | 0.9861 | −0.0139 | 0.9935 | 0.9807 |
+| multi-session | 121 | 0.9504 | 0.9587 | +0.0083 | 0.9755 | 0.9693 |
+| single-session-assistant | 56 | 0.6607 | 0.6607 | 0.0000 | 0.6607 | 0.6518 |
+| single-session-preference | 30 | 1.0000 | 0.9333 | −0.0667 | 0.8672 | 0.8385 |
+| single-session-user | 64 | 1.0000 | 0.9844 | −0.0156 | 0.9885 | 0.9535 |
+| temporal-reasoning | 127 | 0.9134 | 0.8740 | −0.0394 | 0.9471 | 0.9171 |
+
+三点值得记下来：
+
+1. **assistant 精确回落到 0.6607**，与 fact 级逐位相同。这是差异 #1 的闭环证明：
+   只要把"空提炼 session 用原文顶上"这条路切断，session 级在该题型上就只会
+   拿到 fact 级本来就拿到的 37/56。
+2. strict 比含兜底低 0.0340（R@5）——这 0.034 就是兜底制造的虚高。
+3. 其余题型 strict 仍略低于 fact（multi-session 的 recall 小涨 0.0083，但 nDCG 跌 0.0062），
+   说明"把平均 4.2 条 fact 压成一条向量"本身是净损失。**在 mem0 这条链路上，
+   session 收口不是更好的粒度。**
+
+## 结论与建议
+
+- **主表用 fact 级 `recall_all@5 = 0.9234`**（`mem0_lme_s/`）。
+- session 级只能作为消融：干净版是 `0.9064`（strict），它说明收口后反而更差；
+  含原文兜底的 `0.9404` 是虚高，任何表格都不应引用。
+- 若日后在 S 之外的更大数据集上复用，仍建议把 `hits_to_sessions` 改成
+  "先按 session 去重、再截 top-k"，作为与数据规模无关的稳健写法
+  （在 S 上已证明不是必要项，见差异 #2）。
+- M 数据集仍未跑完，需要 API 余额，与本次分析无关。
 
 实现细节（`lme_profile.py`）：
 
@@ -157,6 +193,16 @@ python run_mem0_lme.py --data longmemeval_s_cleaned.json --limit 470 \
 
 # strict session 级 470（去掉空 facts 的原文兜底）
 #   同上，但把 --session-level 换成 --session-level-strict
+python run_mem0_lme.py --data longmemeval_s_cleaned.json --limit 470 \
+  --topk 10 --workers 16 --retrieval dense --model deepseek-flash \
+  --max-tokens 8192 --llm-thinking disabled --question-retries 3 \
+  --embedder BAAI/bge-base-en-v1.5 --embedding-dims 768 \
+  --query-prefix "Represent this sentence for searching relevant passages: " \
+  --oversample 200 --delete-after-question --skip-abs --profile lme \
+  --extract-cache results/extract_cache/cache_resolve_auto.sqlite \
+  --lme-cache-key auto --lme-date-mode resolve --lme-prompt lme \
+  --lme-fact-style rich --lme-batch-sessions 1 \
+  --session-level-strict --out-root results/mem0_bge_session_strict
 
 # 官方复算
 python longmemeval/eval_retrieval_official.py \
