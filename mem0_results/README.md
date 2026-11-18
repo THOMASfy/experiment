@@ -96,6 +96,32 @@ be computed from this file.**
 
 ---
 
+### Extraction cache
+
+`mem0_lme_s/cache/extract_cache_s_facts.sqlite.gz` (5.1MB) is the LLM
+fact-extraction output for every S session the run touched: **20,227 session
+keys** (10.8MB of `key -> JSON facts` rows), keyed exactly like
+`lme_profile.session_cache_key(msgs, date, "auto")`. Restoring it skips the
+2,067 extraction calls entirely.
+
+```bash
+python mem0_results/restore_extract_cache.py            # fresh cache
+python mem0_results/restore_extract_cache.py --merge    # add S rows to an existing cache
+```
+
+BGE vectors are **not** included: 80,994 rows / 249MB of float32 for S alone
+(the full shared cache is 892MB, 626MB of which is vectors). They are
+deterministic from the fact text, so the runner re-embeds whatever is missing
+from the `vectors` table. `cache/manifest.json` records the sha256 of the
+source cache, the dataset, and the archive; `restore_extract_cache.py` verifies
+the archive checksum before unpacking, and `export_extract_cache.py` regenerates
+the slice from a full cache.
+
+854 of the 21,081 S session keys are absent: 30 abstention questions were
+excluded (`--skip-abs`), so their sessions were never extracted.
+
+---
+
 ## Reproducing
 
 ```bash
@@ -126,6 +152,9 @@ python longmemeval/eval_retrieval_official.py \
 | `mem0_lme_s/aggregate.json` | runner metrics (fractional recall), diagnostic |
 | `mem0_lme_s/aggregate_official.json` | official `recall_all` / `ndcg` re-scoring |
 | `mem0_lme_s/llm_usage.json` | token counts and cost estimate |
+| `mem0_lme_s/cache/extract_cache_s_facts.sqlite.gz` | S slice of the LLM extraction cache (facts only) + `manifest.json` |
+| `restore_extract_cache.py` | unpack / merge the cache archive |
+| `export_extract_cache.py` | regenerate the archive from a full local cache |
 
 Raw run directories (`results/`) stay local: they contain the Qdrant store,
 `history.db` and multi-GB datasets. Only the artifacts above are tracked.

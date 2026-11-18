@@ -1,0 +1,16 @@
+{
+  "kind": "mem0-lme extraction cache (facts only)",
+  "source": "results/extract_cache/cache_resolve_auto.sqlite",
+  "source_sha256": "77de50de3dbbb9d4981046e92b053846ecf1c2ce86e08520e9db4916658f91b8",
+  "source_size_bytes": 891564032,
+  "dataset": "longmemeval_s_cleaned.json",
+  "dataset_sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442",
+  "cache_key_mode": "auto (md5 of cleaned session turns, + |date when relative time words present)",
+  "facts_rows": 20227,
+  "s_session_keys": 21081,
+  "missing_keys": 854,
+  "vectors_included": false,
+  "vectors_note": "BGE-base vectors are omitted: 80994 rows / 249MB of float32, deterministically rebuildable by re-running the S run, which embeds any fact text missing from the vectors table.",
+  "file": "extract_cache_s_facts.sqlite.gz",
+  "file_sha256": "257b3f658e6a222f4806bb52f839df4371d6622db6694964cb66f26e68ccf6c6"
+}
