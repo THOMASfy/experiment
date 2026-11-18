@@ -1,0 +1,97 @@
+{
+  "n": 151,
+  "ks": [
+    5,
+    10
+  ],
+  "metrics": {
+    "n": 151,
+    "recall_any@5": 0.9403973509933775,
+    "recall_all@5": 0.9006622516556292,
+    "fractional_recall@5": 0.9300220750551876,
+    "ndcg@5": 0.9158459165044779,
+    "recall_any@10": 0.9403973509933775,
+    "recall_all@10": 0.9337748344370861,
+    "fractional_recall@10": 0.9381898454746136,
+    "ndcg@10": 0.9196601119702486
+  },
+  "by_type": {
+    "knowledge-update": {
+      "n": 23,
+      "recall_any@5": 1.0,
+      "recall_all@5": 1.0,
+      "fractional_recall@5": 1.0,
+      "ndcg@5": 0.9965095995281821,
+      "recall_any@10": 1.0,
+      "recall_all@10": 1.0,
+      "fractional_recall@10": 1.0,
+      "ndcg@10": 0.9965095995281821
+    },
+    "multi-session": {
+      "n": 39,
+      "recall_any@5": 1.0,
+      "recall_all@5": 0.9487179487179487,
+      "fractional_recall@5": 0.9863247863247864,
+      "ndcg@5": 0.9783960747402211,
+      "recall_any@10": 1.0,
+      "recall_all@10": 1.0,
+      "fractional_recall@10": 1.0,
+      "ndcg@10": 0.9857799659624186
+    },
+    "single-session-assistant": {
+      "n": 18,
+      "recall_any@5": 0.5,
+      "recall_all@5": 0.5,
+      "fractional_recall@5": 0.5,
+      "ndcg@5": 0.5,
+      "recall_any@10": 0.5,
+      "recall_all@10": 0.5,
+      "fractional_recall@10": 0.5,
+      "ndcg@10": 0.5
+    },
+    "single-session-preference": {
+      "n": 10,
+      "recall_any@5": 1.0,
+      "recall_all@5": 1.0,
+      "fractional_recall@5": 1.0,
+      "ndcg@5": 0.9261859507142916,
+      "recall_any@10": 1.0,
+      "recall_all@10": 1.0,
+      "fractional_recall@10": 1.0,
+      "ndcg@10": 0.9261859507142916
+    },
+    "single-session-user": {
+      "n": 20,
+      "recall_any@5": 1.0,
+      "recall_all@5": 1.0,
+      "fractional_recall@5": 1.0,
+      "ndcg@5": 0.9815464876785729,
+      "recall_any@10": 1.0,
+      "recall_all@10": 1.0,
+      "fractional_recall@10": 1.0,
+      "ndcg@10": 0.9815464876785729
+    },
+    "temporal-reasoning": {
+      "n": 41,
+      "recall_any@5": 1.0,
+      "recall_all@5": 0.9024390243902439,
+      "fractional_recall@5": 0.9747967479674797,
+      "ndcg@5": 0.9590921079864627,
+      "recall_any@10": 1.0,
+      "recall_all@10": 0.975609756097561,
+      "fractional_recall@10": 0.991869918699187,
+      "ndcg@10": 0.9661158093929431
+    }
+  },
+  "n_gold_distribution": {
+    "1": 54,
+    "2": 71,
+    "3": 15,
+    "4": 6,
+    "5": 4,
+    "6": 1
+  },
+  "n_multi_gold": 97,
+  "predictions": "results\\mem0_bge_s_control\\mem0_20261118-144252\\predictions.jsonl",
+  "include_abs": false
+}

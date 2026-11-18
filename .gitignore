@@ -23,3 +23,4 @@ mem0/
 
 # Published result artifacts are tiny (session ids only) and are tracked
 !mem0_results/**/*.jsonl
+!mem0_results/**/evidence.log

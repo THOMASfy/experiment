@@ -1,0 +1,121 @@
+{
+  "n_total": 151,
+  "n_ok": 151,
+  "n_failed": 0,
+  "n_with_gold": 151,
+  "topk": 10,
+  "retrieval": "dense",
+  "ks": [
+    1,
+    3,
+    5,
+    10
+  ],
+  "overall": {
+    "recall@1": 0.580353,
+    "ndcg@1": 0.92053,
+    "recall@3": 0.928698,
+    "ndcg@3": 0.936687,
+    "recall@5": 0.977704,
+    "ndcg@5": 0.950331,
+    "recall@10": 0.993377,
+    "ndcg@10": 0.956206,
+    "n": 151
+  },
+  "overall_excluding_failed": {
+    "recall@1": 0.580353,
+    "ndcg@1": 0.92053,
+    "recall@3": 0.928698,
+    "ndcg@3": 0.936687,
+    "recall@5": 0.977704,
+    "ndcg@5": 0.950331,
+    "recall@10": 0.993377,
+    "ndcg@10": 0.956206,
+    "n": 151
+  },
+  "by_question_type": {
+    "knowledge-update": {
+      "recall@1": 0.478261,
+      "ndcg@1": 0.956522,
+      "recall@3": 0.978261,
+      "ndcg@3": 0.966361,
+      "recall@5": 1.0,
+      "ndcg@5": 0.976674,
+      "recall@10": 1.0,
+      "ndcg@10": 0.976674,
+      "n": 23
+    },
+    "multi-session": {
+      "recall@1": 0.399145,
+      "ndcg@1": 0.974359,
+      "recall@3": 0.906838,
+      "ndcg@3": 0.962112,
+      "recall@5": 0.994872,
+      "ndcg@5": 0.980469,
+      "recall@10": 1.0,
+      "ndcg@10": 0.983567,
+      "n": 39
+    },
+    "single-session-assistant": {
+      "recall@1": 0.944444,
+      "ndcg@1": 0.944444,
+      "recall@3": 0.944444,
+      "ndcg@3": 0.944444,
+      "recall@5": 1.0,
+      "ndcg@5": 0.968371,
+      "recall@10": 1.0,
+      "ndcg@10": 0.968371,
+      "n": 18
+    },
+    "single-session-preference": {
+      "recall@1": 0.8,
+      "ndcg@1": 0.8,
+      "recall@3": 0.9,
+      "ndcg@3": 0.863093,
+      "recall@5": 0.9,
+      "ndcg@5": 0.863093,
+      "recall@10": 1.0,
+      "ndcg@10": 0.894639,
+      "n": 10
+    },
+    "single-session-user": {
+      "recall@1": 0.9,
+      "ndcg@1": 0.9,
+      "recall@3": 0.95,
+      "ndcg@3": 0.931546,
+      "recall@5": 0.95,
+      "ndcg@5": 0.931546,
+      "recall@10": 0.95,
+      "ndcg@10": 0.931546,
+      "n": 20
+    },
+    "temporal-reasoning": {
+      "recall@1": 0.44065,
+      "ndcg@1": 0.878049,
+      "recall@3": 0.911382,
+      "ndcg@3": 0.912906,
+      "recall@5": 0.971545,
+      "ndcg@5": 0.929406,
+      "recall@10": 1.0,
+      "ndcg@10": 0.940403,
+      "n": 41
+    }
+  },
+  "llm_usage": {
+    "calls": 0,
+    "retried_calls": 0,
+    "prompt_tokens": 0,
+    "cache_hit_tokens": 0,
+    "cache_miss_tokens": 0,
+    "completion_tokens": 0,
+    "cache_hit_ratio": 0.0,
+    "est_cost_usd": {
+      "off_peak": 0.0,
+      "peak": 0.0
+    },
+    "extract_cache": {
+      "hits": 8210,
+      "misses": 0
+    }
+  }
+}

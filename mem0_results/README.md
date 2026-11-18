@@ -1,14 +1,25 @@
 # mem0 on LongMemEval — published results
 
-Two runs are published here. Only the first is a usable benchmark result.
+All runs below use mem0 `2.2.1` (commit `f1791da`), `deepseek-flash` as the
+extraction LLM, `BAAI/bge-base-en-v1.5` (768-d) embeddings, dense retrieval,
+`topk=10`. The 2026-11-18 runs reuse the extraction cache and therefore made
+**zero LLM calls** (`llm_usage.json`: `calls=0`).
 
-| run | dataset | status | questions | primary metric |
-|---|---|---|---:|---|
-| [`mem0_lme_s/`](mem0_lme_s) | LongMemEval-S | **complete** | 470/470 ok | `recall_all@5 = 0.9234` |
-| [`mem0_lme_m_partial/`](mem0_lme_m_partial) | LongMemEval-M | **incomplete, do not cite** | 98/470 ok | — |
+| run | dataset | caliber | n | recall_all@5 | nDCG@5 | status |
+|---|---|---|---:|---:|---:|---|
+| [`mem0_s_session_470/`](mem0_s_session_470) | S | session | 470 | **0.9404** | 0.9453 | complete, **not a clean main-table number** (see warning) |
+| [`mem0_lme_s/`](mem0_lme_s) | S | fact | 470 | 0.9234 | 0.9279 | complete |
+| [`mem0_s_151_session/`](mem0_s_151_session) | S | session | 151 | 0.9536 | 0.9503 | complete (subset) |
+| [`mem0_s_151_fact/`](mem0_s_151_fact) | S | fact | 151 | 0.9007 | 0.9158 | complete (subset) |
+| [`mem0_lme_m_partial/`](mem0_lme_m_partial) | M | fact | 470 | - | - | **incomplete, do not cite** (98/470 ok) |
 
-Both use mem0 `2.2.1` (commit `f1791da`), `deepseek-flash` as the extraction LLM,
-`BAAI/bge-base-en-v1.5` (768-d) embeddings, dense retrieval, `topk=10`.
+> WARNING: the session-level runs currently mix in a **raw-text fallback**. In the
+> extraction cache 26.3% of sessions have an empty fact list (5,327 / 20,227);
+> `--session-level` indexes those sessions with the raw conversation text, while the
+> fact-level path has no vector for them at all. So `0.9404` is a 74% fact / 26% raw
+> hybrid and must **not** be put in the same table as BGE / ThinkQE / SeCom
+> session-level retrieval. Evidence, per-type breakdown and the fix are in
+> [`ANALYSIS_session_vs_fact.md`](ANALYSIS_session_vs_fact.md).
 
 ---
 
@@ -167,6 +178,8 @@ python longmemeval/eval_retrieval_official.py \
 | `mem0_lme_s/aggregate_official.json` | official `recall_all` / `ndcg` re-scoring |
 | `mem0_lme_s/llm_usage.json` | token counts and cost estimate |
 | `mem0_lme_s/cache/extract_cache_s_facts.sqlite.gz` | S slice of the LLM extraction cache (facts only) + `manifest.json` |
+| `mem0_s_session_470/`, `mem0_s_151_session/`, `mem0_s_151_fact/` | 2026-11-18 runs: `meta.json`, `predictions.jsonl`, runner + official aggregates, `llm_usage.json`, `evidence.log` |
+| `ANALYSIS_session_vs_fact.md` | why session-level scores higher than fact-level, and why it is not a clean main-table number |
 | release `mem0-s-cache-v1` | same slice **with** BGE vectors, 243MB gzip (not in git history) |
 | `restore_extract_cache.py` | unpack / merge the cache archive |
 | `export_extract_cache.py` | regenerate the archive from a full local cache |

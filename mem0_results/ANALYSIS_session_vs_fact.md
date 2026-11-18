@@ -1,0 +1,140 @@
+# S 上 session 级 vs fact 级：为什么 session 级更高，以及它为什么不能直接进主表
+
+日期：2026-11-18　数据：LongMemEval-S（470 非 abstention）　LLM 调用：**0**（全部缓存命中）
+
+## TL;DR
+
+`--session-level` 在 S-470 上拿到 `recall_all@5 = 0.9404`，比 fact 级的 `0.9234` **高**。
+这不是因为 session 级收口"更会检索"，而是因为它比 fact 级多做了两件不该混进同一列的事：
+
+1. **空提炼的 session 回退到原始对话文本**（缓存里 26.3% 的 session 提炼结果为空），
+   而 fact 级下这些 session **一个向量都没有**，任何 k 都取不到；
+2. **fact 级被 `oversample=200` 截断**（每题平均 203.6 个记忆点，54.9% 的题超过 200），
+   session 级每题只有 ~48 个点，永远不被截断。
+
+单是第 1 项就足以解释差额：470 里 `single-session-assistant` 的 19 道失分题，
+**19/19 的 gold session 提炼结果都是 `[]`**；命中的 37 道则全部非空。
+37/56 = **0.6607**，正好等于 fact 级该题型在 @5 与 @10 上的同一数值（曲线完全平），
+即这些 session 从未进入索引。
+
+**结论：0.9404 是「74% fact 级 + 26% 原文 session 级」的混合结果，不能作为
+"mem0 提炼后 session 级"的主表数字，也不能和 BGE / ThinkQE / SeCom 的纯 session 检索并表。**
+
+## 四组结果（官方口径，跳过 `_abs`，分母 = 题数）
+
+| run | 口径 | n | recall_all@5 | nDCG@5 | recall_all@10 | nDCG@10 |
+|---|---|---:|---:|---:|---:|---:|
+| `mem0_s_151_fact` | fact 级 | 151 | 0.9007 | 0.9158 | 0.9338 | 0.9197 |
+| `mem0_s_151_session` | session 级 | 151 | 0.9536 | 0.9503 | 0.9934 | 0.9562 |
+| `mem0_s_470_fact`（即 `mem0_lme_s`） | fact 级 | 470 | 0.9234 | 0.9279 | 0.9489 | 0.9315 |
+| `mem0_s_session_470` | session 级 | 470 | **0.9404** | **0.9453** | **0.9809** | **0.9530** |
+
+辅助指标（470）：
+
+| 口径 | recall_any@5 | fractional@5 | recall_any@10 | fractional@10 |
+|---|---:|---:|---:|---:|
+| fact 级 | 0.9574 | 0.9465 | 0.9574 | 0.9541 |
+| session 级 | 0.9872 | 0.9694 | 0.9936 | 0.9893 |
+
+> 151 子集是 `make_subset.py --n 150 --seed 42` 按题型配额取整后得到的 **151 题**
+> （见 `subsets/s_150.json`），不是某个外部锁定的 150 id 列表；151 与 470 的差异
+> 属于抽样噪声，不要拿两者互相比较。
+
+## 470 分题型
+
+| 题型 | n | fact R@5 | session R@5 | Δ | fact nDCG@5 | session nDCG@5 |
+|---|---:|---:|---:|---:|---:|---:|
+| knowledge-update | 72 | 1.0000 | 0.9861 | −0.0139 | 0.9935 | 0.9807 |
+| multi-session | 121 | 0.9504 | 0.9504 | 0.0000 | 0.9755 | 0.9647 |
+| **single-session-assistant** | 56 | **0.6607** | **1.0000** | **+0.3393** | 0.6607 | 0.9832 |
+| single-session-preference | 30 | 1.0000 | 0.9333 | −0.0667 | 0.8672 | 0.8385 |
+| single-session-user | 64 | 1.0000 | 0.9844 | −0.0156 | 0.9885 | 0.9514 |
+| temporal-reasoning | 127 | 0.9134 | 0.8583 | −0.0551 | 0.9471 | 0.9121 |
+
+两个方向都真实存在：
+
+- **+** assistant 类是"空提炼 → 索引里没有"，session 级的原文回退把它救回来；
+- **−** temporal / preference / user 类是"收口损失"，把 4.2 条 fact 平均成一条向量后，
+  同题多候选 session 的区分度变差（nDCG 掉得比 recall_all 更明显）。
+
+## 差异 #1：空提炼的 session 在 fact 级不存在
+
+`lme_profile.write_sessions_lme()` 的收口逻辑：
+
+```python
+if session_level:
+    for sid, dt, facts in per_session:
+        text = "\n".join(facts) if facts else raw_texts.get(sid, "")   # ← 原文兜底
+```
+
+缓存现状：**20,227 条 session 提炼中 5,327 条为空列表（26.3%）**。
+fact 级对空列表不产生任何记忆点 → 该 session 在 Qdrant 里不可见。
+
+逐题核对（470 fact 级，`single-session-assistant`）：
+
+| | 题数 | gold session 的 facts |
+|---|---:|---|
+| 命中 | 37 | 全部非空 |
+| 未命中 | 19 | **全部为空 `[]`** |
+
+同一核对可复现：`.cache/diag_assistant.py`（本次分析用的临时脚本，未入库）。
+
+## 差异 #2：fact 级被候选池截断
+
+```python
+hits = memory.vector_store.search(..., top_k=oversample)   # oversample = 200
+ranked = hits_to_sessions(hits, topk)                      # 先截 200 点，再去重成 session
+```
+
+- fact 级每题记忆点：**均值 203.6 / 中位数 203 / 最大 307**，**258/470 题 > 200**
+- 因此 gold session 的最佳 fact 只要排在 200 名之外，就结构性取不到；
+  `recall_any@10 == recall_any@5`（0.9574）也符合"不是排名深度问题"的特征
+- session 级每题只有 ~48 个点（每题 session 均值 47.6），**从不触发截断**
+
+量化验证正在跑：151 题 fact 级、`--oversample 2000`。
+结果出来后补进本文件（预期 fact 级会向 session 级靠拢，但不会追平差异 #1）。
+
+## 建议的干净口径
+
+要得到"只换收口、不换信息源"的对照，两处都要改：
+
+1. **strict session 级**：`facts == []` 的 session 直接不入库（去掉原文兜底）。
+   这样 session 级与 fact 级共享同一个信息源，差额只反映收口方式。
+2. **fact 级扩容候选池**：`oversample >= 1000`，或把 `hits_to_sessions` 改成
+   "先按 session 去重、再截 top-k"（用 session 级分数做截断，避免 fact 数量影响召回）。
+
+两项都不需要 LLM（缓存已覆盖 S 全部 22,419 个 session 引用，0 缺失），
+S-470 重跑约 40 分钟，`calls` 仍为 0。
+
+## 复现与证据
+
+```bash
+# session 级 470
+python run_mem0_lme.py --data longmemeval_s_cleaned.json --limit 470 \
+  --topk 10 --workers 24 --retrieval dense --model deepseek-flash \
+  --embedder BAAI/bge-base-en-v1.5 --embedding-dims 768 \
+  --query-prefix "Represent this sentence for searching relevant passages: " \
+  --oversample 200 --delete-after-question --skip-abs --profile lme \
+  --extract-cache results/extract_cache/cache_resolve_auto.sqlite \
+  --lme-cache-key auto --lme-date-mode resolve --lme-prompt lme \
+  --lme-fact-style rich --lme-batch-sessions 1 \
+  --session-level --out-root results/mem0_bge_session
+
+# 官方复算
+python longmemeval/eval_retrieval_official.py \
+  results/mem0_bge_session/mem0_20261118-150914/predictions.jsonl \
+  --gold-key answer_session_ids --retrieved-key retrieved_sessions --ks 5 10
+```
+
+每个结果目录都带 `evidence.log`，内含 `extract cache: hits=… misses=0`、
+`LLM usage: calls=0 … est_cost $0.00`、`Finished. n_total=… n_ok=…`。
+
+## 已知瑕疵
+
+- `mem0_s_session_470/meta.json` 与 `llm_usage.json` 是 **resume 覆盖后**的状态
+  （主跑 24 workers，收尾崩溃后用 8 workers 补跑 1 题；`hits=43` 只统计补跑那一轮）。
+  主跑证据见 `evidence.log`。
+- 主跑在 repair 阶段崩过一次：`OperationalError('cannot rollback - no transaction is active')`
+  （sqlite 多线程），补跑后 470/470 全部 ok。
+- 进程退出码 1 是 `qdrant_client.__del__` 在解释器关闭时的
+  `ImportError: sys.meta_path is None`，不影响产物。
