@@ -110,6 +110,16 @@ def main() -> None:
         "file": os.path.basename(archive),
         "file_sha256": sha256(archive),
     }
+    # keep the release pointer if a previous manifest recorded one
+    previous = os.path.join(args.out_dir, "manifest.json")
+    if os.path.exists(previous):
+        try:
+            with open(previous, encoding="utf-8") as handle:
+                old = json.load(handle)
+            if "full_cache_with_vectors" in old:
+                manifest["full_cache_with_vectors"] = old["full_cache_with_vectors"]
+        except (json.JSONDecodeError, OSError):
+            pass
     with open(os.path.join(args.out_dir, "manifest.json"), "w", encoding="utf-8") as handle:
         json.dump(manifest, handle, indent=2)
         handle.write("\n")

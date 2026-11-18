@@ -62,23 +62,46 @@ def main() -> None:
         help="merge into an existing cache instead of overwriting it",
     )
     parser.add_argument("--skip-hash", action="store_true", help="skip archive checksum check")
+    parser.add_argument(
+        "--sha256",
+        default=None,
+        help="expected archive sha256 (default: look it up by file name in the manifest)",
+    )
     args = parser.parse_args()
 
     manifest = load_manifest(args.manifest)
     if not args.skip_hash:
-        actual = sha256(args.archive)
-        if actual != manifest.get("file_sha256"):
-            raise SystemExit(
-                f"checksum mismatch for {args.archive}\n"
-                f"  expected {manifest.get('file_sha256')}\n  actual   {actual}"
-            )
+        expected = args.sha256
+        if expected is None:
+            name = os.path.basename(args.archive)
+            full = manifest.get("full_cache_with_vectors") or {}
+            if name == manifest.get("file"):
+                expected = manifest.get("file_sha256")
+            elif name == full.get("asset"):
+                expected = full.get("sha256")
+        if expected is None:
+            print(f"warning: no checksum for {args.archive} in manifest, skipping verification")
+        else:
+            actual = sha256(args.archive)
+            if actual != expected:
+                raise SystemExit(
+                    f"checksum mismatch for {args.archive}\n"
+                    f"  expected {expected}\n  actual   {actual}"
+                )
 
     os.makedirs(os.path.dirname(os.path.abspath(args.out)) or ".", exist_ok=True)
     fd, tmp = tempfile.mkstemp(suffix=".sqlite")
     os.close(fd)
+    tmp_tables = set()
     try:
         with gzip.open(args.archive, "rb") as fin, open(tmp, "wb") as fout:
             shutil.copyfileobj(fin, fout)
+
+        probe = sqlite3.connect(f"file:{tmp}?mode=ro", uri=True)
+        tmp_tables = {
+            row[0] for row in probe.execute("select name from sqlite_master where type='table'")
+        }
+        probe.close()
 
         if args.merge and os.path.exists(args.out):
             conn = sqlite3.connect(args.out)
@@ -89,27 +112,42 @@ def main() -> None:
             conn.execute("ATTACH DATABASE ? AS src", (tmp,))
             before = conn.execute("select count(*) from facts").fetchone()[0]
             conn.execute("INSERT OR IGNORE INTO facts (key, facts) SELECT key, facts FROM src.facts")
-            conn.commit()
             after = conn.execute("select count(*) from facts").fetchone()[0]
+            message = f"merged into {args.out}: facts {before} -> {after}"
+            if "vectors" in tmp_tables:
+                conn.execute(
+                    "CREATE TABLE IF NOT EXISTS vectors (key TEXT PRIMARY KEY, vec BLOB NOT NULL)"
+                )
+                vbefore = conn.execute("select count(*) from vectors").fetchone()[0]
+                conn.execute(
+                    "INSERT OR IGNORE INTO vectors (key, vec) SELECT key, vec FROM src.vectors"
+                )
+                conn.commit()
+                vafter = conn.execute("select count(*) from vectors").fetchone()[0]
+                message += f", vectors {vbefore} -> {vafter}"
+            conn.commit()
             conn.execute("DETACH DATABASE src")
             conn.close()
-            print(f"merged into {args.out}: {before} -> {after} facts rows")
+            print(message)
         else:
             if os.path.exists(args.out):
                 os.remove(args.out)
             shutil.move(tmp, args.out)
             conn = sqlite3.connect(args.out)
             rows = conn.execute("select count(*) from facts").fetchone()[0]
+            vectors = (
+                conn.execute("select count(*) from vectors").fetchone()[0]
+                if "vectors" in tmp_tables
+                else 0
+            )
             conn.close()
-            print(f"restored {rows} facts rows to {args.out}")
+            print(f"restored {rows} facts rows / {vectors} vectors to {args.out}")
     finally:
         if os.path.exists(tmp):
             os.remove(tmp)
 
-    print(
-        "vectors are not included; the runner will re-embed missing fact texts "
-        f"({manifest.get('vectors_note', '')})"
-    )
+    if "vectors" not in tmp_tables:
+        print("vectors are not in this archive; the runner re-embeds any missing fact text")
 
 
 if __name__ == "__main__":

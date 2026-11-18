@@ -117,6 +117,20 @@ source cache, the dataset, and the archive; `restore_extract_cache.py` verifies
 the archive checksum before unpacking, and `export_extract_cache.py` regenerates
 the slice from a full cache.
 
+The **full** S cache *with* vectors (350MB unzipped, 243MB gzip, 80,994 rows) is
+published as a release asset:
+
+> https://github.com/THOMASfy/experiment/releases/tag/mem0-s-cache-v1
+
+```bash
+python mem0_results/restore_extract_cache.py \
+  --archive extract_cache_s_full.sqlite.gz --out results/extract_cache/cache_resolve_auto.sqlite
+```
+
+Use it when you want to skip re-embedding; the 5.1MB in-repo slice is enough
+for correctness. Git itself must stay vectors-free: a 243MB binary in history
+would bloat every clone forever.
+
 854 of the 21,081 S session keys are absent: 30 abstention questions were
 excluded (`--skip-abs`), so their sessions were never extracted.
 
@@ -153,6 +167,7 @@ python longmemeval/eval_retrieval_official.py \
 | `mem0_lme_s/aggregate_official.json` | official `recall_all` / `ndcg` re-scoring |
 | `mem0_lme_s/llm_usage.json` | token counts and cost estimate |
 | `mem0_lme_s/cache/extract_cache_s_facts.sqlite.gz` | S slice of the LLM extraction cache (facts only) + `manifest.json` |
+| release `mem0-s-cache-v1` | same slice **with** BGE vectors, 243MB gzip (not in git history) |
 | `restore_extract_cache.py` | unpack / merge the cache archive |
 | `export_extract_cache.py` | regenerate the archive from a full local cache |
 

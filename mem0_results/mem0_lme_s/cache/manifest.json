@@ -12,5 +12,12 @@
   "vectors_included": false,
   "vectors_note": "BGE-base vectors are omitted: 80994 rows / 249MB of float32, deterministically rebuildable by re-running the S run, which embeds any fact text missing from the vectors table.",
   "file": "extract_cache_s_facts.sqlite.gz",
-  "file_sha256": "257b3f658e6a222f4806bb52f839df4371d6622db6694964cb66f26e68ccf6c6"
+  "file_sha256": "257b3f658e6a222f4806bb52f839df4371d6622db6694964cb66f26e68ccf6c6",
+  "full_cache_with_vectors": {
+    "where": "https://github.com/THOMASfy/experiment/releases/tag/mem0-s-cache-v1",
+    "asset": "extract_cache_s_full.sqlite.gz",
+    "size_bytes": 242930049,
+    "sha256": "a2197a2fc3bd240995d3883ed183ac121635585a79bb8faa2ace3d4e414a72ed",
+    "contents": {"facts_rows": 20227, "vectors_rows": 80994, "sqlite_size_bytes": 350326784}
+  }
 }
