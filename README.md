@@ -58,15 +58,15 @@ set "OPENAI_BASE_URL=https://api.deepseek.com"
 
 ### 1) S-150 session 级（先小规模验证，0 LLM）
 
-先准备 150 子集（两种方式）：
+先准备 150 子集（用你锁定的配对 150，`subsets/s_150_locked.json`，已入库）：
 
-- 复用已锁定的 150 附表 id：把主仓库 `results/longmemeval/subset_150_ids.json` 拷到本仓库；或
-- 重新抽样：`python make_subset.py --data longmemeval_s_cleaned.json --out subsets/s_150.json --n 150 --seed 42`
+- `subsets/s_150_locked.json`：论文 150 附表锁定的 question-id 列表（150 题）。
+- `subsets/s_150.json`：`make_subset.py --n 150 --seed 42` 按题型配额抽出的 **151 题**，只用于探路，不是配对的 150 附表。
 
 ```bat
 python run_mem0_lme.py ^
   --data longmemeval_s_cleaned.json ^
-  --subset subsets\s_150.json ^
+  --subset subsets\s_150_locked.json ^
   --topk 10 --workers 24 ^
   --retrieval dense --model deepseek-flash --max-tokens 8192 ^
   --llm-thinking disabled --question-retries 3 ^
