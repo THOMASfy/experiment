@@ -5,26 +5,30 @@
 ## TL;DR
 
 `--session-level` 在 S-470 上拿到 `recall_all@5 = 0.9404`，比 fact 级的 `0.9234` **高**。
-这不是因为 session 级收口"更会检索"，而是因为它比 fact 级多做了两件不该混进同一列的事：
+原因是它比 fact 级多做了一件不该混进同一列的事：**空提炼的 session 回退到原始对话文本**
+（缓存里 26.3% 的 session 提炼结果为空），而 fact 级下这些 session **一个向量都没有**，
+任何 k 都取不到。
 
-1. **空提炼的 session 回退到原始对话文本**（缓存里 26.3% 的 session 提炼结果为空），
-   而 fact 级下这些 session **一个向量都没有**，任何 k 都取不到；
-2. **fact 级被 `oversample=200` 截断**（每题平均 203.6 个记忆点，54.9% 的题超过 200），
-   session 级每题只有 ~48 个点，永远不被截断。
-
-单是第 1 项就足以解释差额：470 里 `single-session-assistant` 的 19 道失分题，
+这一项足以解释全部差额：470 里 `single-session-assistant` 的 19 道失分题，
 **19/19 的 gold session 提炼结果都是 `[]`**；命中的 37 道则全部非空。
 37/56 = **0.6607**，正好等于 fact 级该题型在 @5 与 @10 上的同一数值（曲线完全平），
 即这些 session 从未进入索引。
 
-**结论：0.9404 是「74% fact 级 + 26% 原文 session 级」的混合结果，不能作为
-"mem0 提炼后 session 级"的主表数字，也不能和 BGE / ThinkQE / SeCom 的纯 session 检索并表。**
+第二个嫌疑（`oversample=200` 截断）**已用实验排除**：151 题 fact 级把候选池从 200 提到
+2000，`retrieved_sessions` 逐题完全一致（0/151 差异），官方指标也一模一样。
+截断在 S 上不是实际约束，详见下文「差异 #2」。
 
-## 四组结果（官方口径，跳过 `_abs`，分母 = 题数）
+**结论：0.9404 是「74% fact 级 + 26% 原文 BGE 级」的混合结果，不能作为
+"mem0 提炼后 session 级"的主表数字，也不能和 BGE / ThinkQE / SeCom 的纯 session 检索并表。
+去掉原文兜底后（strict，`--session-level-strict`）的数字才是干净的收口对照；
+470 全量正在跑，跑完补在「strict session 级」一节。**
+
+## 结果一览（官方口径，跳过 `_abs`，分母 = 题数）
 
 | run | 口径 | n | recall_all@5 | nDCG@5 | recall_all@10 | nDCG@10 |
 |---|---|---:|---:|---:|---:|---:|
 | `mem0_s_151_fact` | fact 级 | 151 | 0.9007 | 0.9158 | 0.9338 | 0.9197 |
+| `mem0_s_151_fact_os2000` | fact 级，`oversample=2000` | 151 | 0.9007 | 0.9158 | 0.9338 | 0.9197 |
 | `mem0_s_151_session` | session 级 | 151 | 0.9536 | 0.9503 | 0.9934 | 0.9562 |
 | `mem0_s_470_fact`（即 `mem0_lme_s`） | fact 级 | 470 | 0.9234 | 0.9279 | 0.9489 | 0.9315 |
 | `mem0_s_session_470` | session 级 | 470 | **0.9404** | **0.9453** | **0.9809** | **0.9530** |
@@ -79,32 +83,63 @@ fact 级对空列表不产生任何记忆点 → 该 session 在 Qdrant 里不�
 
 同一核对可复现：`.cache/diag_assistant.py`（本次分析用的临时脚本，未入库）。
 
-## 差异 #2：fact 级被候选池截断
+## 差异 #2（已排除）：fact 级候选池截断
+
+`run_mem0_lme.py` 的检索路径是**先截点、再去重**：
 
 ```python
 hits = memory.vector_store.search(..., top_k=oversample)   # oversample = 200
 ranked = hits_to_sessions(hits, topk)                      # 先截 200 点，再去重成 session
 ```
 
+数字上确实存在风险窗口：
+
 - fact 级每题记忆点：**均值 203.6 / 中位数 203 / 最大 307**，**258/470 题 > 200**
-- 因此 gold session 的最佳 fact 只要排在 200 名之外，就结构性取不到；
-  `recall_any@10 == recall_any@5`（0.9574）也符合"不是排名深度问题"的特征
 - session 级每题只有 ~48 个点（每题 session 均值 47.6），**从不触发截断**
 
-量化验证正在跑：151 题 fact 级、`--oversample 2000`。
-结果出来后补进本文件（预期 fact 级会向 session 级靠拢，但不会追平差异 #1）。
+**实验结论：截断在 S 上不是实际约束。**
+151 题 fact 级、`--oversample 2000`（候选池放大 10 倍，远超最大 307 点）：
+
+| | recall_all@5 | nDCG@5 | recall_all@10 | nDCG@10 |
+|---|---:|---:|---:|---:|
+| `oversample=200` | 0.9007 | 0.9158 | 0.9338 | 0.9197 |
+| `oversample=2000` | 0.9007 | 0.9158 | 0.9338 | 0.9197 |
+
+逐题对比：**0/151 题的 `retrieved_sessions` 有任何差异**，`n_memories_added` 也完全相同，
+分题型表逐项一致（assistant 仍是 0.5000，temporal 仍是 0.9024）。
+即 gold session 的最佳 fact 本来就落在前 200 名内，放大候选池只是把长尾点取回来。
+
+同时这也解释了 `recall_any@10 == recall_any@5`（470 fact 级 0.9574）：
+那是"多 gold 题只缺一个 session"的现象，不是排名深度不够。
+
+所以差额**只剩差异 #1**。这一点很关键：修 fact 级不需要动 `oversample`，
+只需要把 session 级的原文兜底去掉，两边就共享同一信息源。
 
 ## 建议的干净口径
 
-要得到"只换收口、不换信息源"的对照，两处都要改：
+要得到"只换收口、不换信息源"的对照，只需改一处：
 
-1. **strict session 级**：`facts == []` 的 session 直接不入库（去掉原文兜底）。
-   这样 session 级与 fact 级共享同一个信息源，差额只反映收口方式。
-2. **fact 级扩容候选池**：`oversample >= 1000`，或把 `hits_to_sessions` 改成
-   "先按 session 去重、再截 top-k"（用 session 级分数做截断，避免 fact 数量影响召回）。
+1. **strict session 级**（已实现，`--session-level-strict`）：`facts == []` 的 session
+   直接不入库（去掉原文兜底）。这样 session 级与 fact 级共享同一个信息源，
+   差额只反映"把 4.2 条 fact 压成一条向量"这件事本身。
+2. ~~fact 级扩容候选池~~：已被上面的实验排除，不是必要项。若日后在 S 之外的
+   更大数据集上复用，仍建议把 `hits_to_sessions` 改成"先按 session 去重、再截 top-k"，
+   作为与数据规模无关的稳健写法。
 
-两项都不需要 LLM（缓存已覆盖 S 全部 22,419 个 session 引用，0 缺失），
-S-470 重跑约 40 分钟，`calls` 仍为 0。
+不需要 LLM（缓存已覆盖 S 全部 22,419 个 session 引用，0 缺失），`calls` 仍为 0。
+
+实现细节（`lme_profile.py`）：
+
+```python
+if facts:
+    text = "\n".join(facts)
+else:
+    text = raw_texts.get(sid, "") if empty_fallback else ""   # strict: 空
+```
+
+3 题冒烟验证（`89527b6b` / `6ae235be` / `ceb54acb`，都是 assistant 空 facts 题）：
+入库向量数 = 该题**非空** session 数（33 / 32 / 39，与离线统计逐题相等），
+gold session 全部从检索结果中消失，`calls=0`。
 
 ## 复现与证据
 
@@ -119,6 +154,9 @@ python run_mem0_lme.py --data longmemeval_s_cleaned.json --limit 470 \
   --lme-cache-key auto --lme-date-mode resolve --lme-prompt lme \
   --lme-fact-style rich --lme-batch-sessions 1 \
   --session-level --out-root results/mem0_bge_session
+
+# strict session 级 470（去掉空 facts 的原文兜底）
+#   同上，但把 --session-level 换成 --session-level-strict
 
 # 官方复算
 python longmemeval/eval_retrieval_official.py \

@@ -654,6 +654,7 @@ def process_one_question(
             prefilter_topk=int(ctx.get("prefilter_topk") or 0),
             query_prefix=str(ctx.get("query_prefix") or ""),
             session_level=bool(ctx.get("session_level", False)),
+            empty_fallback=bool(ctx.get("empty_fallback", True)),
         )
     else:
         # 幂等: 清掉上次(可能被中断的)残留记忆
@@ -958,6 +959,12 @@ def main():
         help="session 级收口: LLM 提炼不变, 但每个 session 合成一条记忆、只落一个向量,"
         " 检索直接返回 session (对齐 BGE/ThinkQE/SeCom 等 session 级检索口径)。",
     )
+    parser.add_argument(
+        "--session-level-strict",
+        action="store_true",
+        help="配合 --session-level: facts 为空的 session 不入库 (去掉原文兜底),"
+        " 使 session 级与 fact 级共享同一信息源。隐含 --session-level。",
+    )
     parser.add_argument("--mem0-repo", type=str, default="mem0")
     parser.add_argument(
         "--telemetry",
@@ -1048,7 +1055,8 @@ def main():
             "batch_sessions": args.lme_batch_sessions,
             "prefilter_topk": args.lme_prefilter_topk,
             "query_prefix": query_prefix,
-            "session_level": bool(args.session_level),
+            "session_level": bool(args.session_level or args.session_level_strict),
+            "empty_fallback": not bool(args.session_level_strict),
         }
         logger.info(
             "[LME] profile=lme cache=%s max_facts=%d cache_key=%s date_mode=%s prompt=%s",
@@ -1108,7 +1116,8 @@ def main():
         "lme_fact_style": args.lme_fact_style,
         "lme_batch_sessions": args.lme_batch_sessions,
         "lme_prefilter_topk": args.lme_prefilter_topk,
-        "session_level": bool(args.session_level),
+        "session_level": bool(args.session_level or args.session_level_strict),
+        "session_level_strict": bool(args.session_level_strict),
         "question_retries": args.question_retries,
         "api_check": api_info,
     }

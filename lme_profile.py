@@ -624,6 +624,7 @@ def write_sessions_lme(
     query_prefix: str = "",
     write_history: bool = False,
     session_level: bool = False,
+    empty_fallback: bool = True,
 ) -> int:
     """lme profile 的写入路径。
 
@@ -701,10 +702,17 @@ def write_sessions_lme(
             per_session.append((sid, dt, facts))
 
     # --- 2b. session 级收口: 每个 session 合成一条记忆向量 ---
+    # empty_fallback=True  : facts 为空时回退原始对话文本 (老行为, 会把 26% 的
+    #                        空提炼 session 变成原文检索 -> 与 fact 级不可比)
+    # empty_fallback=False : facts 为空则该 session 不入库 (strict, 与 fact 级
+    #                        共享同一信息源, 差额只反映收口方式)
     if session_level:
         collapsed: List[Tuple[str, str, List[str]]] = []
         for sid, dt, facts in per_session:
-            text = "\n".join(facts) if facts else raw_texts.get(sid, "")
+            if facts:
+                text = "\n".join(facts)
+            else:
+                text = raw_texts.get(sid, "") if empty_fallback else ""
             text = (text or "").strip()
             if not text:
                 continue
