@@ -28,14 +28,20 @@
 
 ## 本地必须有、但 GitHub 不传的东西
 
-| 本地文件 | 作用 |
-|---|---|
-| `longmemeval_s_cleaned.json` / `longmemeval_m_cleaned.json` | 数据 |
-| `results/extract_cache/cache_resolve_auto.sqlite` | mem0 提炼缓存（按 session 内容寻址） |
-| `results/mem0_*/` | 运行目录（Qdrant local store、history.db，>100MB） |
-| `mem0/` | mem0ai 2.2.1 源码 checkout |
+| 本地文件 | 作用 | GitHub 是否有 |
+|---|---|---|
+| `longmemeval_s_cleaned.json` / `longmemeval_m_cleaned.json` | 数据 | 否（太大，不传） |
+| `mem0/` | mem0ai 2.2.1 源码 checkout | 否（上游仓库，不 vendored） |
+| `results/mem0_*/`（Qdrant store、history.db） | 运行目录，>100MB | 否 |
+| `results/extract_cache/cache_resolve_auto.sqlite` | mem0 提炼缓存 | **可恢复**：facts-only 5MB 在仓库，全量带向量版在 release `mem0-s-cache-v1` |
 
-`.gitignore` 已挡掉以上所有；**不要 `git add` 向量/缓存/数据。**
+跑 S 前先恢复提炼缓存（跳过 2067 次 LLM）：
+
+```bash
+python mem0_results/restore_extract_cache.py --out results/extract_cache/cache_resolve_auto.sqlite
+```
+
+`.gitignore` 已挡掉数据/向量库/原始缓存；**不要 `git add` 大文件。**
 
 ## 环境
 
@@ -99,6 +105,7 @@ python run_mem0_lme.py ^
 ```bash
 python longmemeval/eval_retrieval_official.py \
   results/mem0_bge_session/mem0_<timestamp>/predictions.jsonl \
+  --gold-key answer_session_ids --retrieved-key retrieved_sessions \
   --ks 5 10
 ```
 
