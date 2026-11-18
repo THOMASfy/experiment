@@ -653,6 +653,7 @@ def process_one_question(
             batch_sessions=int(ctx.get("batch_sessions") or 1),
             prefilter_topk=int(ctx.get("prefilter_topk") or 0),
             query_prefix=str(ctx.get("query_prefix") or ""),
+            session_level=bool(ctx.get("session_level", False)),
         )
     else:
         # 幂等: 清掉上次(可能被中断的)残留记忆
@@ -951,6 +952,12 @@ def main():
         help="⚠️ query-aware 粗筛: 只对 BGE 命中的 top-k 个 session 做 LLM 提炼。"
         "0 = 关闭。开启会改变方法性质 (retrieve-then-extract), 不能算原版 mem0。",
     )
+    parser.add_argument(
+        "--session-level",
+        action="store_true",
+        help="session 级收口: LLM 提炼不变, 但每个 session 合成一条记忆、只落一个向量,"
+        " 检索直接返回 session (对齐 BGE/ThinkQE/SeCom 等 session 级检索口径)。",
+    )
     parser.add_argument("--mem0-repo", type=str, default="mem0")
     parser.add_argument(
         "--telemetry",
@@ -1041,6 +1048,7 @@ def main():
             "batch_sessions": args.lme_batch_sessions,
             "prefilter_topk": args.lme_prefilter_topk,
             "query_prefix": query_prefix,
+            "session_level": bool(args.session_level),
         }
         logger.info(
             "[LME] profile=lme cache=%s max_facts=%d cache_key=%s date_mode=%s prompt=%s",
@@ -1100,6 +1108,7 @@ def main():
         "lme_fact_style": args.lme_fact_style,
         "lme_batch_sessions": args.lme_batch_sessions,
         "lme_prefilter_topk": args.lme_prefilter_topk,
+        "session_level": bool(args.session_level),
         "question_retries": args.question_retries,
         "api_check": api_info,
     }

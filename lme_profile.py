@@ -623,6 +623,7 @@ def write_sessions_lme(
     prefilter_topk: int = 0,
     query_prefix: str = "",
     write_history: bool = False,
+    session_level: bool = False,
 ) -> int:
     """lme profile 的写入路径。
 
@@ -647,6 +648,7 @@ def write_sessions_lme(
     # --- 1. 逐 session 取 fact 文本 (缓存命中就完全不调 LLM) ---
     pending: List[Tuple[str, str, List[Dict[str, str]], str]] = []
     per_session: List[Tuple[str, str, List[str]]] = []
+    raw_texts: Dict[str, str] = {}
     n_llm_calls = 0
 
     for i, turns in enumerate(sessions):
@@ -655,6 +657,7 @@ def write_sessions_lme(
         msgs = clean_turns_local(turns)
         if not msgs:
             continue
+        raw_texts[sid] = " ".join(str(m.get("content", "")) for m in msgs)
         if allowed is not None and sid not in allowed:
             continue
         key = session_cache_key(msgs, str(dt), key_mode)
@@ -696,6 +699,17 @@ def write_sessions_lme(
             if cache is not None:
                 cache.put_facts(key, facts)
             per_session.append((sid, dt, facts))
+
+    # --- 2b. session 级收口: 每个 session 合成一条记忆向量 ---
+    if session_level:
+        collapsed: List[Tuple[str, str, List[str]]] = []
+        for sid, dt, facts in per_session:
+            text = "\n".join(facts) if facts else raw_texts.get(sid, "")
+            text = (text or "").strip()
+            if not text:
+                continue
+            collapsed.append((sid, str(dt), [text]))
+        per_session = collapsed
 
     # --- 3. 一题一次性 embed (比 stock 每 session 一次 embed_batch 快很多) ---
     texts: List[str] = []
